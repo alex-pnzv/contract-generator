@@ -14,6 +14,7 @@ from Frames.delivery_address import DeliveryAddressFrame
 from Frames.delivery_time import DeliveryTimeFrame
 from Frames.dk import DkFrame
 from Frames.funding_source import FundingSourceFrame
+from Frames.specification import Specification
 from Frames.sum import SumFrame
 from Frames.user import UserFrame
 from Windows.address import Address
@@ -25,16 +26,20 @@ from database import DB
 from Utills.utills import *
 
 
-class Main(tk.Frame):
-    def __init__(self, root):
+class Main(tk.Tk):
+    def __init__(self):
         super().__init__()
+        self.title('Генератор договорів')
+        self.minsize(600, 400)
+        # self.geometry('600x640+300+200')
+        # self.resizable(True, True)
         self.init_navbar()
         self.init_main()
         self.db = db
-        root.protocol('WM_DELETE_WINDOW', self.save_before_close)  # root is your root window
+        self.protocol('WM_DELETE_WINDOW', self.save_before_close)
 
     def init_navbar(self):
-        navbar = Menu(root)
+        navbar = Menu(self)
         new_item = Menu(navbar, tearoff=0)
         new_item.add_command(label="Контрагенти", command=self.open_user_db)
         new_item.add_separator()
@@ -45,40 +50,44 @@ class Main(tk.Frame):
         new_item.add_command(label="Рахунки", command=self.open_bank_account_db)
         navbar.add_cascade(label="Довідники", menu=new_item)
         navbar.add_command(label="Шаблони", command=self.open_template_db)
-        navbar.add_command(label="Справка")
-        root.config(menu=navbar)
+        navbar.add_command(label="Справка", command=self.open_help)
+        self.config(menu=navbar)
 
     def init_main(self):
-        self.pack(fill=tk.BOTH, expand=True)
+        main_frame = tk.Frame(self)
+        main_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+        # main_frame.pack_propagate(0)
 
-        self.contract_type = ContractType(self, self.change_contract_type)
-        self.contract_frame = ContractFrame(self)
+        self.contract_type = ContractType(main_frame, self.change_contract_type, self.toggle_spec)
+        self.contract_frame = ContractFrame(main_frame)
 
-        self.user_frame = UserFrame(self, db)
+        self.user_frame = UserFrame(main_frame, db)
         valid_username = self.register(self.user_frame.check_user_name_value)
         self.user_frame.name.configure(validatecommand=(valid_username, "%P"))
-
         self.user_frame.hide_info()
 
-        self.dk_frame = DkFrame(self, db)
-        self.delivery_address_frame = DeliveryAddressFrame(self, db)
-        self.bank_account_frame = BankAccountFrame(self, db)
+        self.dk_frame = DkFrame(main_frame, db)
+        self.delivery_address_frame = DeliveryAddressFrame(main_frame, db)
+        self.bank_account_frame = BankAccountFrame(main_frame, db)
 
-        self.contract_term_frame = ContractTerm(self)
+        self.contract_term_frame = ContractTerm(main_frame)
         valid_contract_date = self.register(self.contract_term_frame.check_contract_term_date)
         self.contract_term_frame.contract_term.configure(validatecommand=(valid_contract_date, "%P"))
 
-        self.delivery_time_frame = DeliveryTimeFrame(self)
+        self.delivery_time_frame = DeliveryTimeFrame(main_frame)
         valid_delivery_date = self.register(self.delivery_time_frame.check_value)
         self.delivery_time_frame.delivery_time.configure(validatecommand=(valid_delivery_date, '%P'))
 
-        self.funding_source_frame = FundingSourceFrame(self)
-        self.sum_frame = SumFrame(self)
+        self.funding_source_frame = FundingSourceFrame(main_frame)
+        self.sum_frame = SumFrame(main_frame)
 
-        save_button = tk.Button(root, text="Зберегти договір", command=self.save_docx)
+        self.spec_frame = Specification(text='Специфікація')
+        # self.spec_frame.pack(side=tk.RIGHT,anchor=tk.N)
+
+        save_button = tk.Button(main_frame, text="Зберегти договір", command=self.save_docx)
         save_button.pack(side=tk.RIGHT, padx=10, pady=(0, 10))
 
-        save_template_button = tk.Button(root, text='Зберегти шаблон', command=self.save_template)
+        save_template_button = tk.Button(main_frame, text='Зберегти шаблон', command=self.save_template)
         save_template_button.pack(side=tk.RIGHT, padx=0, pady=(0, 10))
 
     def change_contract_type(self):
@@ -90,6 +99,12 @@ class Main(tk.Frame):
         elif type == "service":
             self.delivery_address_frame.delivery_place.pack_forget()
             self.delivery_time_frame.delivery_time_main_frame.pack_forget()
+
+    def toggle_spec(self, event=None):
+        if self.contract_type.chkValue.get():
+            self.spec_frame.pack(side=tk.LEFT, fill=tk.BOTH, anchor=tk.N, pady=5, padx=(0, 5))
+        else:
+            self.spec_frame.pack_forget()
 
     def save_user_if_not_exist(self):
         edrpou = self.user_frame.edrpou.get()
@@ -107,7 +122,7 @@ class Main(tk.Frame):
                 if result:
                     self.user_frame.save_user()
         # if not:
-        root.destroy()
+        self.destroy()
 
     def save_docx(self):
         # Prepare the data...
@@ -117,37 +132,38 @@ class Main(tk.Frame):
         else:
             filename = os.path.join(dirname, 'templates\\dogovir_service.docx')
         try:
+            template_dict = {
+                'user': str(self.user_frame.name.get()).strip(),
+                'edrpou': str(self.user_frame.edrpou.get()).strip(),
+                'iban': str(self.user_frame.iban.get()).strip(),
+                'bank_mfo': str(self.user_frame.bank_mfo.get()).strip(),
+                'bank_name': str(self.user_frame.bank_name.get()).strip(),
+                'postal': str(self.user_frame.postal.get()).strip(),
+                'region': str(self.user_frame.region.get()).strip(),
+                'district': str(self.user_frame.district.get()).strip(),
+                'city': str(self.user_frame.city.get()).strip(),
+                'street': str(self.user_frame.street.get()).strip(),
+                'house': str(self.user_frame.house.get()).strip(),
+                'telephone': str(self.user_frame.telephone.get()).strip(),
+                'contract_subject': str(self.contract_frame.contract.get()).strip(),
+                'DK_num': str(self.dk_frame.dk.get()).strip(),
+                'DK_description': str(self.dk_frame.dk_desc.get(1.0, tk.END)).strip(),
+                'institution_name': str(self.delivery_address_frame.institution.get()).strip(),
+                'institution_address': str(self.delivery_address_frame.institution_address.get()).strip(),
+                'delivery_time': str(month_to_text(self.delivery_time_frame.delivery_time.get())).strip(),
+                'funding': str(self.funding_source_frame.get_funding_value()).strip(),
+                'price_num': str(self.sum_frame.sum.get()).strip(),
+                'price_word': str(price_to_words(self.sum_frame.sum.get())).strip(),
+                'initials_end': str(initials_end(self.user_frame.name.get())).strip(),
+                'initials_start': str(initials_start(self.user_frame.name.get())).strip(),
+                'capitalize_price': str(price_to_words(self.sum_frame.sum.get(), upper=True)).strip(),
+                'stamp': self.user_frame.stamp_val.get(),
+                'contract_term': str(month_to_text(self.contract_term_frame.contract_term.get())).strip(),
+                'bank_account': str(self.bank_account_frame.bank_account_value.get()).strip(),
+                'spec_tbl': self.spec_frame.get_spec_value()
+            }
             doc = DocxTemplate(filename)
-            doc.render(
-                {'user': str(self.user_frame.name.get()).strip(),
-                 'edrpou': str(self.user_frame.edrpou.get()).strip(),
-                 'iban': str(self.user_frame.iban.get()).strip(),
-                 'bank_mfo': str(self.user_frame.bank_mfo.get()).strip(),
-                 'bank_name': str(self.user_frame.bank_name.get()).strip(),
-                 'postal': str(self.user_frame.postal.get()).strip(),
-                 'region': str(self.user_frame.region.get()).strip(),
-                 'district': str(self.user_frame.district.get()).strip(),
-                 'city': str(self.user_frame.city.get()).strip(),
-                 'street': str(self.user_frame.street.get()).strip(),
-                 'house': str(self.user_frame.house.get()).strip(),
-                 'telephone': str(self.user_frame.telephone.get()).strip(),
-                 'contract_subject': str(self.contract_frame.contract.get()).strip(),
-                 'DK_num': str(self.dk_frame.dk.get()).strip(),
-                 'DK_description': str(self.dk_frame.dk_desc.get(1.0, tk.END)).strip(),
-                 'institution_name': str(self.delivery_address_frame.institution.get()).strip(),
-                 'institution_address': str(self.delivery_address_frame.institution_address.get()).strip(),
-                 'delivery_time': str(month_to_text(self.delivery_time_frame.delivery_time.get())).strip(),
-                 'funding': str(self.funding_source_frame.get_funding_value()).strip(),
-                 'price_num': str(self.sum_frame.sum.get()).strip(),
-                 'price_word': str(price_to_words(self.sum_frame.sum.get())).strip(),
-                 'initials_end': str(initials_end(self.user_frame.name.get())).strip(),
-                 'initials_start': str(initials_start(self.user_frame.name.get())).strip(),
-                 'capitalize_price': str(price_to_words(self.sum_frame.sum.get(), upper=True)).strip(),
-                 'stamp': str(self.user_frame.stamp_val.get()).strip(),
-                 'contract_term': str(month_to_text(self.contract_term_frame.contract_term.get())).strip(),
-                 'bank_account': str(self.bank_account_frame.bank_account_value.get()).strip()
-                 }
-            )
+            doc.render(template_dict)
 
             f = fd.asksaveasfile(mode='w', defaultextension=".docx", filetypes=(("DOCX", "*.docx"), ("All files", "*")))
             if f is None:  # asksaveasfile return `None` if dialog closed with "cancel".
@@ -156,8 +172,6 @@ class Main(tk.Frame):
             name = f.name
             basename = os.path.basename(name)
             path = os.path.dirname(name)
-            print(path)
-            print(basename)
 
             doc.save(path + "/" + basename)
             os.startfile(path)
@@ -187,8 +201,11 @@ class Main(tk.Frame):
     def open_template_db(self):
         Templates(db, self.load_template)
 
-    def load_template(self, id):
-        row = self.db.get_template_by_id(id)
+    def open_help(self):
+        os.startfile("info.chm")
+
+    def load_template(self, template_id):
+        row = self.db.get_template_by_id(template_id)
         if row:
             self.contract_type.contract_type_value.set(row[2])
             self.change_contract_type()
@@ -233,12 +250,6 @@ class Main(tk.Frame):
 
 
 if __name__ == '__main__':
-    root = tk.Tk()
     db = DB()
-    app = Main(root)
-    app.pack()
-    root.minsize(600, 100)
-    root.title('Генератор договорів')
-    # root.geometry('600x640+300+200')
-    root.resizable(True, True)
-    root.mainloop()
+    app = Main()
+    app.mainloop()

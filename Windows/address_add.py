@@ -3,13 +3,13 @@ import tkinter as tk
 from Frames.delivery_address import DeliveryAddressFrame
 
 
-class AddAddress(tk.Toplevel,DeliveryAddressFrame):
-    def __init__(self,db, on_close, **kw):
+class AddAddress(tk.Toplevel, DeliveryAddressFrame):
+    def __init__(self, db, on_close, **kw):
         super().__init__(**kw)
         self.on_close = on_close
         self.db = db
         self.title('Новий запис')
-        self.minsize(600,110)
+        self.minsize(600, 110)
         self.grab_set()
         self.focus_set()
         self.init_add_address()

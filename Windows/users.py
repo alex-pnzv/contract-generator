@@ -8,7 +8,7 @@ from Windows.users_edit import EditUsers
 
 
 class Users(Directory):
-    def __init__(self,root,db):
+    def __init__(self, root, db):
         self.root = root
         super().__init__()
         self.init_users()
@@ -18,28 +18,18 @@ class Users(Directory):
 
     def init_users(self):
         self.title('Контрагенти')
-        self.minsize(400,250)
+        self.minsize(400, 250)
         self.focus_set()
         self.grab_set()
 
-        self.tree = ttk.Treeview(self,column=('id','edrpou','name' ), height=15, show="headings")
-        self.tree.column('id',stretch=tk.NO, minwidth=0, width=0)
+        self.tree = ttk.Treeview(self, column=('id', 'edrpou', 'name'), height=15, show="headings")
+        self.tree.column('id', stretch=tk.NO, minwidth=0, width=0)
         self.tree.column('edrpou', width=80, anchor=tk.W)
         self.tree.column('name', width=200, anchor=tk.W)
         self.tree.heading('name', text="ПІБ")
         self.tree.heading('edrpou', text="ЄДРПОУ")
-        #self.tree.heading('iban', text="IBAN")
-        #self.tree.heading('bank_mfo', text="МФО банку")
-        #self.tree.heading('bank_name', text="Назва банку")
-        #self.tree.heading('postal_code', text="Індекс")
-        #self.tree.heading('region', text="Область")
-        #self.tree.heading('district', text="Район")
-        #self.tree.heading('city', text="Місто")
-        #self.tree.heading('street', text="Вулиця")
-        #self.tree.heading('house_num', text="будинок")
-        #self.tree.heading('telephone', text="телефон")
         self.tree.bind("<Double-1>", self.update_user)
-        self.tree.pack(fill="both",expand=True)
+        self.tree.pack(fill="both", expand=True)
         self.tree.bind("<Button-3>", self.popup)
 
         scroll = ttk.Scrollbar(self.tree, orient='vertical', command=self.tree.yview)
@@ -47,7 +37,7 @@ class Users(Directory):
         self.tree.configure(yscrollcommand=scroll.set)
 
         self.popup_menu = tk.Menu(self, tearoff=0)
-        self.popup_menu.add_command(label="Редагувати",command=self.update_user)
+        self.popup_menu.add_command(label="Редагувати", command=self.update_user)
         self.popup_menu.add_command(label="Видалити", command=self.delete_user)
 
         self.add_button.configure(command=self.open_add_user)
@@ -56,19 +46,19 @@ class Users(Directory):
         self.search_entry.bind('<KeyRelease>', self._search)
 
     def open_add_user(self):
-        UserAdd(self.db,self._search)
+        UserAdd(self.db, self._search)
 
-    def update_user(self,event=None):
+    def update_user(self, event=None):
         selected_item = self.tree.selection()[0]
-        user_id = self.tree.set(selected_item,"#1")
-        EditUsers(self.db,user_id,self._search)
+        user_id = self.tree.set(selected_item, "#1")
+        EditUsers(self.db, user_id, self._search)
         self.focus_get()
         self.grab_release()
 
     def delete_user(self):
         if len(self.tree.selection()) == 1:
             selected_item = self.tree.selection()[0]
-            user_id = self.tree.set(selected_item,"#1")
+            user_id = self.tree.set(selected_item, "#1")
             result = mb.askyesno("Підтвердіть видалення", 'Ви впевнені що хочете видалити запис?')
             if result:
                 self.db.del_user(user_id)

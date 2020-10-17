@@ -6,27 +6,28 @@ from Windows.address_add import AddAddress
 from Windows.address_edit import EditAddress
 from Windows.directory import Directory
 
+
 class Address(Directory):
-    def __init__(self,root,db):
+    def __init__(self, root, db):
         self.root = root
         super().__init__()
         self.title('Адреси поставки')
-        self.minsize(700,300)
-        self.init_users()
+        self.minsize(700, 300)
+        self.init_address()
         self.db = db
         self._search()
         self.protocol('WM_DELETE_WINDOW', self.update_address_autocomplete)
 
-    def init_users(self):
-        self.tree = ttk.Treeview(self,column=('id','name','address' ), height=15, show="headings")
-        self.tree.column('id',stretch=tk.NO, minwidth=0, width=0)
+    def init_address(self):
+        self.tree = ttk.Treeview(self, column=('id', 'name', 'address'), height=15, show="headings")
+        self.tree.column('id', stretch=tk.NO, minwidth=0, width=0)
         self.tree.column('name', width=250, anchor=tk.W)
         self.tree.column('address', width=450, anchor=tk.W)
         self.tree.heading('name', text="Назва закладу")
         self.tree.heading('address', text="Адреса")
         self.tree.bind("<Double-1>", self.update_address)
         self.tree.bind("<Button-3>", self.popup)
-        self.tree.pack(fill='both',expand=True)
+        self.tree.pack(fill='both', expand=True)
 
         vsb = ttk.Scrollbar(self.tree, orient="vertical", command=self.tree.yview)
         vsb.pack(side=tk.RIGHT, fill=tk.Y)
@@ -43,19 +44,19 @@ class Address(Directory):
         self.search_entry.bind('<KeyRelease>', self._search)
 
     def open_add_addres(self):
-        AddAddress(self.db,self._search)
+        AddAddress(self.db, self._search)
 
     def update_address(self, event=None):
         selected_item = self.tree.selection()[0]
-        user_id = self.tree.set(selected_item,"#1")
-        EditAddress(self.root,self.db,user_id,self._search)
+        user_id = self.tree.set(selected_item, "#1")
+        EditAddress(self.root, self.db, user_id, self._search)
         self.focus_get()
         self.grab_release()
 
     def delete_address(self):
         if len(self.tree.selection()) == 1:
             selected_item = self.tree.selection()[0]
-            address_id = self.tree.set(selected_item,"#1")
+            address_id = self.tree.set(selected_item, "#1")
             result = mb.askyesno("Підтвердіть видалення", 'Ви впевнені що хочете видалити запис?')
             if result:
                 self.db.del_address(address_id)

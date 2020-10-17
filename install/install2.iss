@@ -38,8 +38,8 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 [Files]
 Source: "C:\Users\Acor\Desktop\contract-generator\dist\main.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Acor\Desktop\contract-generator\dist\debug.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Acor\Desktop\contract-generator\info.chm"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Acor\Desktop\contract-generator\templates\*"; DestDir: "{app}\templates"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Users\Acor\Desktop\contract-generator\icons\*"; DestDir: "{app}\icons"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\Users\Acor\Desktop\contract-generator\database.db"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

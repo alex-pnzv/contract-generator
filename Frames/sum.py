@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 
-class SumFrame():
+class SumFrame:
     def __init__(self, root):
         sum_frame = tk.Frame(root)
         sum_frame.pack(fill=tk.X, padx=5)

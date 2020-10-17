@@ -1,6 +1,5 @@
 import tkinter as tk
 import tkinter.ttk as ttk
-import tkinter.messagebox as mb
 from Utills.combobox_autocomplete import ComboboxAutocomplete
 
 
@@ -13,7 +12,7 @@ class DeliveryAddressFrame():
     def init_frame(self, root):
         padx = 5
         pady = 2
-        # ---------- Місце поставки---------
+
         self.delivery_place = tk.LabelFrame(root, text="Місце поставки")
         self.delivery_place.pack(fill=tk.X, padx=padx)
 
@@ -22,10 +21,9 @@ class DeliveryAddressFrame():
         institution_label = tk.Label(self.institution_frame, text="Назва закладу", width=14, anchor=tk.W)
         institution_label.pack(side=tk.LEFT, padx=padx, pady=pady)
         self.institution = ComboboxAutocomplete(self.institution_frame, [], callback=self.set_delivery_address,
-                                                        listbox_height=4)
+                                                listbox_height=4)
 
         self.institution.pack(fill=tk.X, padx=padx, pady=pady)
-
 
         institution_adress_frame = tk.Frame(self.delivery_place)
         institution_adress_frame.pack(fill=tk.X)
@@ -35,17 +33,14 @@ class DeliveryAddressFrame():
         self.institution_address.pack(fill=tk.X, padx=padx, pady=pady)
 
         self.save_delivery_place = tk.Button(self.delivery_place)
-        # self.save_delivery_place.pack(side=tk.RIGHT, padx=padx, pady=(0,5))
-        # END ---------- Місце поставки---------
 
     def set_delivery_address(self):
         institution_name = self.institution.get()
-        address = self.db.get_delivery_address_by_name(institution_name)
-        if address:
-            self.institution_address.delete(0, tk.END)
-            self.institution_address.insert(0, address[0])
-
-
+        if institution_name:
+            address = self.db.get_delivery_address_by_name(institution_name)
+            if address:
+                self.institution_address.delete(0, tk.END)
+                self.institution_address.insert(0, address[0])
 
     def update_autocomplete_address_list(self):
         institution_list = self.db.get_institution_name_list()
