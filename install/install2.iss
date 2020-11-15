@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Генератор договорів"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.2"
 #define MyAppExeName "main.exe"
 
 [Setup]
@@ -24,7 +24,7 @@ OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-VersionInfoVersion=1.0
+VersionInfoVersion=1.2
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

@@ -19,9 +19,9 @@ class ContractType:
                                         text='Послуга', command=onchangecommand)
         contract_type2.pack(side=tk.LEFT, padx=5)
 
-        self.chkValue = tk.BooleanVar()
-        self.chkValue.set(False)
-        spec = ttk.Checkbutton(contract_type_frame, text='Специфікація', var=self.chkValue, command=checkboxcallback)
+        self.spec_value = tk.BooleanVar()
+        self.spec_value.set(False)
+        spec = ttk.Checkbutton(contract_type_frame, text='Специфікація', var=self.spec_value, command=checkboxcallback)
         spec.pack(side=tk.LEFT, padx=5)
 
         self.contract_type_value.set("product")

@@ -1,6 +1,8 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 
+from Utills.utills import save_spec, price_from_str
+
 
 class Specification(tk.LabelFrame):
     def __init__(self, **kw):
@@ -11,7 +13,7 @@ class Specification(tk.LabelFrame):
         self.count_spec_position_frame.grid()
         self.count_spec_position_label = tk.Label(self.count_spec_position_frame, text='Кількість позицій', width=14)
         self.count_spec_position_label.grid(row=1, column=0)
-        self.count_spec_position = ttk.Spinbox(self.count_spec_position_frame,state="readonly", from_=1, to=30)
+        self.count_spec_position = ttk.Spinbox(self.count_spec_position_frame, state="readonly", from_=1, to=30)
         self.count_spec_position.bind('<<Increment>>', self._on_increment)
         self.count_spec_position.bind('<<Decrement>>', self._on_decrement)
         self.count_spec_position.set(1)
@@ -34,6 +36,11 @@ class Specification(tk.LabelFrame):
 
         self._on_increment()
 
+        self.button_frame = tk.Frame(self)
+        self.button_frame.grid(sticky="ew")
+        #self.save_spec_btn = tk.Button(self.button_frame, text='Експорт специфікації')
+        #self.save_spec_btn.pack(side=tk.RIGHT, padx=5)
+
     def get_spec_value(self, event=None):
         """
         Pack row entry values in dictionary
@@ -55,24 +62,24 @@ class Specification(tk.LabelFrame):
             elif i == 4:
                 row.setdefault('quantity', value.get())
             elif i == 5:
-                row.setdefault('price', value.get())
+                row.setdefault('price', price_from_str(value.get()))
             elif i == 6:
-                row.setdefault('sum', value.get())
+                row.setdefault('sum', price_from_str(value.get()))
                 respond.append(row)
                 row = {}
                 i = 0
         return respond
 
     def _on_increment(self, event=None):
-        i = 0                                           # Entry position in frame grid
-        if len(self.entries) < 180:                     # limit in 30 rows
-            if len(self.entries) >= 12:                 # for third and more row
+        i = 0  # Entry position in frame grid
+        if len(self.entries) < 180:  # limit in 30 rows
+            if len(self.entries) >= 12:  # for third and more row
                 i = int(self.entries[-6].get()) + 1
-            elif len(self.entries) == 6:                # for second row
+            elif len(self.entries) == 6:  # for second row
                 i = 2
             elif not len(self.entries):
                 i = 1
-            self.en = ttk.Entry(self.main_spec_frame, width=2)
+            self.en = ttk.Entry(self.main_spec_frame, width=2, takefocus=0)
             self.en.grid(row=i + 1, column=0)
             self.en.insert(0, i)
             self.en2 = ttk.Entry(self.main_spec_frame, width=50)
@@ -99,4 +106,4 @@ class Specification(tk.LabelFrame):
             for entry in delete_list:
                 entry.destroy()
                 self.entries.pop()
-        self.focus()                              # remove focus from spinbox
+        self.focus()  # remove focus from spinbox

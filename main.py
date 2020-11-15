@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
+
 from tkinter import Menu
 from tkinter import filedialog as fd
 from docxtpl import DocxTemplate
@@ -40,15 +41,24 @@ class Main(tk.Tk):
 
     def init_navbar(self):
         navbar = Menu(self)
-        new_item = Menu(navbar, tearoff=0)
-        new_item.add_command(label="Контрагенти", command=self.open_user_db)
-        new_item.add_separator()
-        new_item.add_command(label="ДК", command=self.open_dk_db)
-        new_item.add_separator()
-        new_item.add_command(label="Адреси", command=self.open_address_db)
-        new_item.add_separator()
-        new_item.add_command(label="Рахунки", command=self.open_bank_account_db)
-        navbar.add_cascade(label="Довідники", menu=new_item)
+        directory_menu = Menu(navbar, tearoff=0)
+        directory_menu.add_command(label="Контрагенти", command=self.open_user_db)
+        directory_menu.add_separator()
+        directory_menu.add_command(label="ДК", command=self.open_dk_db)
+        directory_menu.add_separator()
+        directory_menu.add_command(label="Адреси", command=self.open_address_db)
+        directory_menu.add_separator()
+        directory_menu.add_command(label="Рахунки", command=self.open_bank_account_db)
+
+        file_menu = Menu(navbar, tearoff=0)
+        file_menu.add_command(label="Новий договір", command=self.new_document)
+        file_menu.add_command(label='Зберегти договір', command=self.save_docx)
+        file_menu.add_command(label="Експорт специфікації", command=self.export_spec)
+        file_menu.add_separator()
+        file_menu.add_command(label="Вихід", command=self.save_before_close)
+
+        navbar.add_cascade(label='Файл', menu=file_menu)
+        navbar.add_cascade(label="Довідники", menu=directory_menu)
         navbar.add_command(label="Шаблони", command=self.open_template_db)
         navbar.add_command(label="Справка", command=self.open_help)
         self.config(menu=navbar)
@@ -83,12 +93,16 @@ class Main(tk.Tk):
 
         self.spec_frame = Specification(text='Специфікація')
         # self.spec_frame.pack(side=tk.RIGHT,anchor=tk.N)
+        #self.spec_frame.save_spec_btn.configure(command=self.export_spec)
 
         save_button = tk.Button(main_frame, text="Зберегти договір", command=self.save_docx)
-        save_button.pack(side=tk.RIGHT, padx=10, pady=(0, 10))
+        save_button.pack(side=tk.RIGHT, padx=10, pady=(0, 10), anchor=tk.N)
 
         save_template_button = tk.Button(main_frame, text='Зберегти шаблон', command=self.save_template)
-        save_template_button.pack(side=tk.RIGHT, padx=0, pady=(0, 10))
+        save_template_button.pack(side=tk.RIGHT, padx=0, pady=(0, 10), anchor=tk.N)
+
+    def export_spec(self):
+        save_spec(self.spec_frame.get_spec_value(), self.dk_frame.dk.get())
 
     def change_contract_type(self):
         type = self.contract_type.contract_type_value.get()
@@ -101,7 +115,7 @@ class Main(tk.Tk):
             self.delivery_time_frame.delivery_time_main_frame.pack_forget()
 
     def toggle_spec(self, event=None):
-        if self.contract_type.chkValue.get():
+        if self.contract_type.spec_value.get():
             self.spec_frame.pack(side=tk.LEFT, fill=tk.BOTH, anchor=tk.N, pady=5, padx=(0, 5))
         else:
             self.spec_frame.pack_forget()
@@ -131,6 +145,7 @@ class Main(tk.Tk):
             filename = os.path.join(dirname, 'templates\\dogovir.docx')
         else:
             filename = os.path.join(dirname, 'templates\\dogovir_service.docx')
+
         try:
             template_dict = {
                 'user': str(self.user_frame.name.get()).strip(),
@@ -152,16 +167,19 @@ class Main(tk.Tk):
                 'institution_address': str(self.delivery_address_frame.institution_address.get()).strip(),
                 'delivery_time': str(month_to_text(self.delivery_time_frame.delivery_time.get())).strip(),
                 'funding': str(self.funding_source_frame.get_funding_value()).strip(),
-                'price_num': str(self.sum_frame.sum.get()).strip(),
+                'price_num': str(price_from_str(self.sum_frame.sum.get().strip())),
                 'price_word': str(price_to_words(self.sum_frame.sum.get())).strip(),
                 'initials_end': str(initials_end(self.user_frame.name.get())).strip(),
                 'initials_start': str(initials_start(self.user_frame.name.get())).strip(),
                 'capitalize_price': str(price_to_words(self.sum_frame.sum.get(), upper=True)).strip(),
                 'stamp': self.user_frame.stamp_val.get(),
                 'contract_term': str(month_to_text(self.contract_term_frame.contract_term.get())).strip(),
-                'bank_account': str(self.bank_account_frame.bank_account_value.get()).strip(),
-                'spec_tbl': self.spec_frame.get_spec_value()
+                'bank_account': str(self.bank_account_frame.bank_account_value.get()).strip()
             }
+
+            if self.contract_type.spec_value.get():
+                template_dict.setdefault("spec_tbl", self.spec_frame.get_spec_value())
+
             doc = DocxTemplate(filename)
             doc.render(template_dict)
 
@@ -203,6 +221,42 @@ class Main(tk.Tk):
 
     def open_help(self):
         os.startfile("info.chm")
+
+    def new_document(self):
+        result = mb.askyesno('Новий документ', 'Ви дійсно бажаєте створити новий документ?')
+        if result:
+            self.contract_type.contract_type_value.set('product')
+            self.change_contract_type()
+            self.contract_frame.contract.delete(0, tk.END)
+            self.contract_type.spec_value.set(False)
+            self.toggle_spec()
+            self.spec_frame.destroy()
+            self.spec_frame = Specification(text='Специфікація')
+
+            self.user_frame.edrpou.delete(0, tk.END)
+            self.user_frame.name.delete(0, tk.END)
+            self.user_frame.iban.delete(0, tk.END)
+            self.user_frame.postal.delete(0, tk.END)
+            self.user_frame.region.delete(0, tk.END)
+            self.user_frame.district.delete(0, tk.END)
+            self.user_frame.city.delete(0, tk.END)
+            self.user_frame.street.delete(0, tk.END)
+            self.user_frame.house.delete(0, tk.END)
+            self.user_frame.bank_name.delete(0, tk.END)
+            self.user_frame.bank_mfo.delete(0, tk.END)
+            self.user_frame.telephone.delete(0, tk.END)
+            self.user_frame.stamp_val.set(True)
+
+            self.dk_frame.dk.delete(0, tk.END)
+            self.dk_frame.dk_desc.delete(1.0, tk.END)
+            self.delivery_address_frame.institution.delete(0, tk.END)
+            self.delivery_address_frame.institution_address.delete(0, tk.END)
+            self.bank_account_frame.bank_account_name.delete(0, tk.END)
+            self.bank_account_frame.bank_account_value.delete(0, tk.END)
+            self.contract_term_frame.contract_term.delete(0, tk.END)
+            self.delivery_time_frame.delivery_time.delete(0, tk.END)
+            self.funding_source_frame.funding_value.set(1)
+            self.sum_frame.sum.delete(0, tk.END)
 
     def load_template(self, template_id):
         row = self.db.get_template_by_id(template_id)
