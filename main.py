@@ -1,11 +1,6 @@
-import os
 import tkinter as tk
-import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
-
 from tkinter import Menu
-from tkinter import filedialog as fd
-from docxtpl import DocxTemplate
 
 from Frames.bank_account import BankAccountFrame
 from Frames.contract import ContractFrame
@@ -32,12 +27,11 @@ class Main(tk.Tk):
         super().__init__()
         self.title('Генератор договорів')
         self.minsize(600, 400)
-        # self.geometry('600x640+300+200')
-        # self.resizable(True, True)
         self.init_navbar()
         self.init_main()
         self.db = db
         self.protocol('WM_DELETE_WINDOW', self.save_before_close)
+        self.bind_all("<Key>", self._on_key_release, "+")
 
     def init_navbar(self):
         navbar = Menu(self)
@@ -52,8 +46,9 @@ class Main(tk.Tk):
 
         file_menu = Menu(navbar, tearoff=0)
         file_menu.add_command(label="Новий договір", command=self.new_document)
-        file_menu.add_command(label='Зберегти договір', command=self.save_docx)
+        file_menu.add_command(label='Зберегти договір', command=self.save_contract)
         file_menu.add_command(label="Експорт специфікації", command=self.export_spec)
+        file_menu.add_command(label="Експорт накладної", command=self.export_invoice)
         file_menu.add_separator()
         file_menu.add_command(label="Вихід", command=self.save_before_close)
 
@@ -66,7 +61,6 @@ class Main(tk.Tk):
     def init_main(self):
         main_frame = tk.Frame(self)
         main_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
-        # main_frame.pack_propagate(0)
 
         self.contract_type = ContractType(main_frame, self.change_contract_type, self.toggle_spec)
         self.contract_frame = ContractFrame(main_frame)
@@ -93,16 +87,37 @@ class Main(tk.Tk):
 
         self.spec_frame = Specification(text='Специфікація')
         # self.spec_frame.pack(side=tk.RIGHT,anchor=tk.N)
-        #self.spec_frame.save_spec_btn.configure(command=self.export_spec)
+        # self.spec_frame.save_spec_btn.configure(command=self.export_spec)
 
-        save_button = tk.Button(main_frame, text="Зберегти договір", command=self.save_docx)
+        save_button = tk.Button(main_frame, text="Зберегти договір", command=self.save_contract)
         save_button.pack(side=tk.RIGHT, padx=10, pady=(0, 10), anchor=tk.N)
 
         save_template_button = tk.Button(main_frame, text='Зберегти шаблон', command=self.save_template)
         save_template_button.pack(side=tk.RIGHT, padx=0, pady=(0, 10), anchor=tk.N)
 
     def export_spec(self):
-        save_spec(self.spec_frame.get_spec_value(), self.dk_frame.dk.get())
+        spec_data = self.spec_frame.get_spec_value()
+        if spec_data:
+            save_spec(spec_data, self.dk_frame.dk.get())
+
+    def export_invoice(self):
+        template_dict = self.get_entry_values()
+        if template_dict:
+            dirname = os.path.dirname(__file__)
+            filename = os.path.join(dirname, 'templates\\nakladna.docx')
+            print(filename)
+            doc = DocxTemplate(filename)
+            doc.render(template_dict)
+            f = fd.asksaveasfile(mode='w', defaultextension=".docx", filetypes=(("DOCX", "*.docx"), ("All files", "*")))
+            if f is None:  # asksaveasfile return `None` if dialog closed with "cancel".
+                return
+            name = f.name
+            basename = os.path.basename(name)
+            path = os.path.dirname(name)
+            doc.save(path + "/" + basename)
+            os.startfile(path)
+
+
 
     def change_contract_type(self):
         type = self.contract_type.contract_type_value.get()
@@ -138,14 +153,7 @@ class Main(tk.Tk):
         # if not:
         self.destroy()
 
-    def save_docx(self):
-        # Prepare the data...
-        dirname = os.path.dirname(__file__)
-        if self.contract_type.contract_type_value.get() == "product":
-            filename = os.path.join(dirname, 'templates\\dogovir.docx')
-        else:
-            filename = os.path.join(dirname, 'templates\\dogovir_service.docx')
-
+    def get_entry_values(self):
         try:
             template_dict = {
                 'user': str(self.user_frame.name.get()).strip(),
@@ -176,24 +184,9 @@ class Main(tk.Tk):
                 'contract_term': str(month_to_text(self.contract_term_frame.contract_term.get())).strip(),
                 'bank_account': str(self.bank_account_frame.bank_account_value.get()).strip()
             }
-
             if self.contract_type.spec_value.get():
                 template_dict.setdefault("spec_tbl", self.spec_frame.get_spec_value())
-
-            doc = DocxTemplate(filename)
-            doc.render(template_dict)
-
-            f = fd.asksaveasfile(mode='w', defaultextension=".docx", filetypes=(("DOCX", "*.docx"), ("All files", "*")))
-            if f is None:  # asksaveasfile return `None` if dialog closed with "cancel".
-                return
-
-            name = f.name
-            basename = os.path.basename(name)
-            path = os.path.dirname(name)
-
-            doc.save(path + "/" + basename)
-            os.startfile(path)
-
+            return template_dict
         except InvalidUserName:
             mb.showerror("Помилка", "Невірно вказано ПІБ!")
         except InvalidDate:
@@ -203,6 +196,26 @@ class Main(tk.Tk):
         except Exception as e:
             print(e)
             mb.showerror("Помилка", e)
+
+    def save_contract(self):
+        dirname = os.path.dirname(__file__)
+        if self.contract_type.contract_type_value.get() == "product":
+            filename = os.path.join(dirname, 'templates\\dogovir.docx')
+        else:
+            filename = os.path.join(dirname, 'templates\\dogovir_service.docx')
+        print(filename)
+        template_dict = self.get_entry_values()
+        if template_dict:
+            doc = DocxTemplate(filename)
+            doc.render(template_dict)
+            f = fd.asksaveasfile(mode='w', defaultextension=".docx", filetypes=(("DOCX", "*.docx"), ("All files", "*")))
+            if f is None:  # asksaveasfile return `None` if dialog closed with "cancel".
+                return
+            name = f.name
+            basename = os.path.basename(name)
+            path = os.path.dirname(name)
+            doc.save(path + "/" + basename)
+            os.startfile(path)
 
     def open_user_db(self):
         Users(self, db)
@@ -301,6 +314,17 @@ class Main(tk.Tk):
                                  self.funding_source_frame.get_funding_value(),
                                  self.sum_frame.sum.get()
                                  )
+
+    def _on_key_release(self, event):
+        ctrl = (event.state & 0x4) != 0
+        if event.keycode == 88 and ctrl and event.keysym.lower() != "x":
+            event.widget.event_generate("<<Cut>>")
+        elif event.keycode == 86 and ctrl and event.keysym.lower() != "v":
+            event.widget.event_generate("<<Paste>>")
+        elif event.keycode == 67 and ctrl and event.keysym.lower() != "c":
+            event.widget.event_generate("<<Copy>>")
+        elif event.keycode == 65 and ctrl and event.keysym.lower() != "a":
+            event.widget.event_generate("<<SelectAll>>")
 
 
 if __name__ == '__main__':

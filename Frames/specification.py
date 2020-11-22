@@ -2,12 +2,13 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 from Utills.utills import save_spec, price_from_str
-
+from Utills.autocomplete_entry_words import AutocompleteEntryWords
 
 class Specification(tk.LabelFrame):
     def __init__(self, **kw):
         super().__init__(**kw)
         self.entries = []
+        self.measurement_autocomplete = []
 
         self.count_spec_position_frame = tk.Frame(self)
         self.count_spec_position_frame.grid()
@@ -84,7 +85,10 @@ class Specification(tk.LabelFrame):
             self.en.insert(0, i)
             self.en2 = ttk.Entry(self.main_spec_frame, width=50)
             self.en2.grid(row=i + 1, column=1)
-            self.en3 = ttk.Entry(self.main_spec_frame, width=10)
+            self.en3 = AutocompleteEntryWords(self.main_spec_frame, completevalues=self.measurement_autocomplete,
+                                              width=10)
+            self.en3.bind("<FocusOut>",self._add_measurement_autocomplete_list)
+            self.en3.bind()
             self.en3.grid(row=i + 1, column=2)
             self.en4 = ttk.Entry(self.main_spec_frame, width=5)
             self.en4.grid(row=i + 1, column=3)
@@ -99,6 +103,14 @@ class Specification(tk.LabelFrame):
             self.entries.append(self.en5)
             self.entries.append(self.en6)
         self.focus()  # remove focus from spinbox
+
+    def _add_measurement_autocomplete_list(self,event=None):
+        for entry in self.entries[2::6]:
+            measurement_value = entry.get()
+            if measurement_value and measurement_value not in self.measurement_autocomplete:
+                self.measurement_autocomplete.append(measurement_value)
+            entry.configure(completevalues=self.measurement_autocomplete)
+
 
     def _on_decrement(self, event):
         if len(self.entries) > 6:
