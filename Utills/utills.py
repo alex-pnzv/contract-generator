@@ -28,6 +28,24 @@ def price_from_str(price: str, sep=','):
         raise InvalidSum
 
 
+def load_spec():
+    data = []
+    spec_file_path = fd.askopenfilename(title='Імпорт специфікації', filetypes=(('csv', '*.csv'),))
+    if spec_file_path:
+        with open(spec_file_path, 'r') as spec_file:
+            file = csv.reader(spec_file, delimiter=';')
+            next(file)  # skip headers
+            for row_num, row in enumerate(file, start=1):
+                calculate_sum = int(row[4]) * float(str(row[5]).replace(',', '.'))
+                data.append(row_num)
+                data.append(row[0])
+                data.append(row[3])
+                data.append(row[4])
+                data.append(row[5])
+                data.append(price_from_str(str(calculate_sum)))
+        return data
+
+
 def save_spec(data, edrpou):
     file_name = fd.asksaveasfilename(defaultextension=".csv", filetypes=(("csv", "*.csv"), ("All files", "*")))
     if file_name:

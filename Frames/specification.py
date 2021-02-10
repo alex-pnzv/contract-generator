@@ -4,6 +4,7 @@ import tkinter.ttk as ttk
 from Utills.utills import save_spec, price_from_str
 from Utills.autocomplete_entry_words import AutocompleteEntryWords
 
+
 class Specification(tk.LabelFrame):
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -39,8 +40,21 @@ class Specification(tk.LabelFrame):
 
         self.button_frame = tk.Frame(self)
         self.button_frame.grid(sticky="ew")
-        #self.save_spec_btn = tk.Button(self.button_frame, text='Експорт специфікації')
-        #self.save_spec_btn.pack(side=tk.RIGHT, padx=5)
+        # self.save_spec_btn = tk.Button(self.button_frame, text='Експорт специфікації')
+        # self.save_spec_btn.pack(side=tk.RIGHT, padx=5)
+
+    def set_spec_values(self, data):
+        num_of_rows = int(len(data) / 6)
+        self.count_spec_position.set(num_of_rows)
+        for entry in self.entries[::-1]:
+            entry.destroy()
+            self.entries.pop()
+        for row in range(num_of_rows):
+            self._on_increment()
+
+        for entry, entry_data in zip(self.entries, data):
+            entry.delete(0, tk.END)
+            entry.insert(0, entry_data)
 
     def get_spec_value(self, event=None):
         """
@@ -87,7 +101,7 @@ class Specification(tk.LabelFrame):
             self.en2.grid(row=i + 1, column=1)
             self.en3 = AutocompleteEntryWords(self.main_spec_frame, completevalues=self.measurement_autocomplete,
                                               width=10)
-            self.en3.bind("<FocusOut>",self._add_measurement_autocomplete_list)
+            self.en3.bind("<FocusOut>", self._add_measurement_autocomplete_list)
             self.en3.bind()
             self.en3.grid(row=i + 1, column=2)
             self.en4 = ttk.Entry(self.main_spec_frame, width=5)
@@ -104,13 +118,12 @@ class Specification(tk.LabelFrame):
             self.entries.append(self.en6)
         self.focus()  # remove focus from spinbox
 
-    def _add_measurement_autocomplete_list(self,event=None):
+    def _add_measurement_autocomplete_list(self, event=None):
         for entry in self.entries[2::6]:
             measurement_value = entry.get()
             if measurement_value and measurement_value not in self.measurement_autocomplete:
                 self.measurement_autocomplete.append(measurement_value)
             entry.configure(completevalues=self.measurement_autocomplete)
-
 
     def _on_decrement(self, event):
         if len(self.entries) > 6:

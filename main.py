@@ -47,6 +47,7 @@ class Main(tk.Tk):
         file_menu = Menu(navbar, tearoff=0)
         file_menu.add_command(label="Новий договір", command=self.new_document)
         file_menu.add_command(label='Зберегти договір', command=self.save_contract)
+        file_menu.add_command(label="Імпорт специфікації", command=self.import_spec)
         file_menu.add_command(label="Експорт специфікації", command=self.export_spec)
         file_menu.add_command(label="Експорт накладної", command=self.export_invoice)
         file_menu.add_separator()
@@ -95,6 +96,13 @@ class Main(tk.Tk):
         save_template_button = tk.Button(main_frame, text='Зберегти шаблон', command=self.save_template)
         save_template_button.pack(side=tk.RIGHT, padx=0, pady=(0, 10), anchor=tk.N)
 
+    def import_spec(self):
+        try:
+            data = load_spec()
+            self.spec_frame.set_spec_values(data)
+        except Exception as error:
+            mb.showerror('Помилка',error)
+
     def export_spec(self):
         spec_data = self.spec_frame.get_spec_value()
         if spec_data:
@@ -116,8 +124,6 @@ class Main(tk.Tk):
             path = os.path.dirname(name)
             doc.save(path + "/" + basename)
             os.startfile(path)
-
-
 
     def change_contract_type(self):
         type = self.contract_type.contract_type_value.get()
@@ -173,7 +179,6 @@ class Main(tk.Tk):
                 'DK_description': str(self.dk_frame.dk_desc.get(1.0, tk.END)).strip(),
                 'institution_name': str(self.delivery_address_frame.institution.get()).strip(),
                 'institution_address': str(self.delivery_address_frame.institution_address.get()).strip(),
-                'delivery_time': str(month_to_text(self.delivery_time_frame.delivery_time.get())).strip(),
                 'funding': str(self.funding_source_frame.get_funding_value()).strip(),
                 'price_num': str(price_from_str(self.sum_frame.sum.get().strip())),
                 'price_word': str(price_to_words(self.sum_frame.sum.get())).strip(),
@@ -184,6 +189,9 @@ class Main(tk.Tk):
                 'contract_term': str(month_to_text(self.contract_term_frame.contract_term.get())).strip(),
                 'bank_account': str(self.bank_account_frame.bank_account_value.get()).strip()
             }
+            if self.contract_type.contract_type_value.get() == "product":
+                template_dict.setdefault('delivery_time',
+                                         str(month_to_text(self.delivery_time_frame.delivery_time.get())).strip())
             if self.contract_type.spec_value.get():
                 template_dict.setdefault("spec_tbl", self.spec_frame.get_spec_value())
             return template_dict
