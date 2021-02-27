@@ -147,8 +147,16 @@ class DB:
         return self.c.fetchall()
 
     def get_bank_account_by_name(self, name):
-        self.c.execute("SELECT value FROM bank_accounts WHERE name=?", (name,))
-        return self.c.fetchone()
+        placeholders = ', '.join(['?'] * len(name))
+
+        order = 'ORDER BY CASE name '
+        for num, n in enumerate(name):
+            order += 'WHEN "{}" THEN {} '.format(n.strip(),num)
+        order += ' END'
+
+        query = "SELECT value FROM bank_accounts WHERE name IN ({}) {}".format(placeholders, order)
+        self.c.execute(query, tuple(name))
+        return self.c.fetchall()
 
     def del_bank_account(self, id):
         self.c.execute("DELETE FROM bank_accounts WHERE id=?", (id))
