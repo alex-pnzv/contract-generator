@@ -187,7 +187,8 @@ class Main(tk.Tk):
                 'capitalize_price': str(price_to_words(self.sum_frame.sum.get(), upper=True)).strip(),
                 'stamp': self.user_frame.stamp_val.get(),
                 'contract_term': str(month_to_text(self.contract_term_frame.contract_term.get())).strip(),
-                'bank_account': self.bank_account_frame.get_values()
+                'bank_account': self.bank_account_frame.get_values(),
+                'upper_lname': upper_lastname(self.user_frame.name.get())
             }
             if self.contract_type.contract_type_value.get() == "product":
                 template_dict.setdefault('delivery_time',

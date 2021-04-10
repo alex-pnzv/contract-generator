@@ -108,6 +108,16 @@ def initials_start(name):
     return "{}.{}. {}".format(firstname, patronymic, lastname)
 
 
+def upper_lastname(name: str):
+    fio = name.split(' ')
+    try:
+        firstname = fio[1]
+        lastname = fio[0].upper()
+    except IndexError:
+        raise InvalidUserName
+    return "{} {}".format(firstname, lastname)
+
+
 def month_to_text(date):
     month = {'01': 'січня',
              '02': 'лютого',
