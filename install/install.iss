@@ -2,28 +2,29 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Генератор договорів"
-#define MyAppVersion "1.0"
+
 #define MyAppExeName "main.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{60D8CC85-08A2-4271-9BAA-E1F4C705F77E}
+AppId={{4F9FA6FD-959E-4730-835A-81BE7B8CA287}
 AppName={#MyAppName}
-AppVersion={#MyAppVersion}
+AppVersion={#ApplicationVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
 DefaultDirName={autopf}\Contract generator
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 ; The [Icons] "quicklaunchicon" entry uses {userappdata} but its [Tasks] entry has a proper IsAdminInstallMode Check.
 UsedUserAreasWarning=no
-; Uncomment the following line to run in non administrative install mode (install for current user only.)
-;PrivilegesRequired=lowest
+; Remove the following line to run in administrative install mode (install for all users.)
+PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=commandline
 OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-VersionInfoVersion=1.0
+VersionInfoVersion={#ApplicationVersion}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -35,14 +36,16 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
 
 [Files]
-Source: "C:\Users\Acor\Desktop\contract-generator\dist\main.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Acor\Desktop\contract-generator\icons\*"; DestDir: "{app}\icons"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Users\Acor\Desktop\contract-generator\templates\*"; DestDir: "{app}\templates"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Users\Acor\Desktop\contract-generator\database.db"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\main.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\updater.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\info.chm"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\changelog.txt"; DestDir: "{app}";
+Source: "..\templates\*"; DestDir: "{app}\templates"; 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\Оновлення програми"; Filename: "{app}\updater.exe"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{group}\Шаблони"; Filename: "{app}\templates"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
